@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Service System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #e74c3c;
+            --secondary-color: #3498db;
+            --accent-color: #2ecc71;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        .pulse-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            z-index: -1;
+            opacity: 0.6;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 30px auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .login-container, .main-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            transition: all 0.5s ease;
+            position: relative;
+            z-index: 10;
+            margin-bottom: 20px;
+        }
+        
+        .main-container {
+            display: none;
+        }
+        
+        h1 {
+            color: var(--dark-color);
+            margin-bottom: 20px;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        h1 i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .heart-beat {
+            animation: heartBeat 1.5s ease-in-out infinite;
+            display: inline-block;
+        }
+        
+        @keyframes heartBeat {
+            0% { transform: scale(1); }
+            14% { transform: scale(1.2); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.2); }
+            70% { transform: scale(1); }
+        }
+        
+        .input-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 15px 20px;
+            padding-left: 45px;
+            border: 2px solid #ddd;
+            border-radius: 30px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+            font-size: 18px;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 25px 0;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .btn i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-accent {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .btn-accent:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: #888;
+        }
+        
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background-color: #ddd;
+        }
+        
+        .divider::before {
+            margin-right: 10px;
+        }
+        
+        .divider::after {
+            margin-left: 10px;
+        }
+        
+        .social-login {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .social-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .social-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .google {
+            background-color: #DB4437;
+        }
+        
+        .facebook {
+            background-color: #4267B2;
+        }
+        
+        .twitter {
+            background-color: #1DA1F2;
+        }
+        
+        .small-text {
+            font-size: 14px;
+            color: #888;
+            margin-top: 20px;
+        }
+        
+        .link {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .link:hover {
+            color: #2980b9;
+        }
+        
+        .emergency-section {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+        
+        .emergency-alert {
+            background-color: rgba(231, 76, 60, 0.1);
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            border-radius: 5px;
+        }
+        
+        .emergency-alert i {
+            color: var(--primary-color);
+            font-size: 24px;
+            margin-right: 15px;
+        }
+        
+        .emergency-alert p {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .emergency-alert strong {
+            color: var(--primary-color);
+        }
+        
+        .user-profile {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        .user-profile i {
+            color: var(--dark-color);
+            font-size: 20px;
+        }
+        
+        .user-profile:hover {
+            transform: scale(1.1);
+        }
+        
+        .bounce-in {
+            animation: bounceIn 0.75s ease;
+        }
+        
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+        
+        .medical-icons {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .medical-icon {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(231, 76, 60, 0.1);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 10px;
+            color: var(--primary-color);
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        .medical-icon:hover {
+            transform: scale(1.1);
+            background-color: rgba(231, 76, 60, 0.2);
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .login-container, .main-container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .medical-icons {
+                flex-wrap: wrap;
+            }
+            
+            .medical-icon {
+                margin: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="pulse-background"></div>
+    
+    <!-- User Profile Icon -->
+    <div class="user-profile" id="user-profile" style="display: none;">
+        <i class="fas fa-user"></i>
+    </div>
+    
+    <div class="container">
+        <!-- Login Container -->
+        <div class="login-container" id="login-container">
+            <h1><i class="fas fa-heartbeat heart-beat"></i> Emergency Service System</h1>
+            
+            <div class="medical-icons">
+                <div class="medical-icon"><i class="fas fa-ambulance"></i></div>
+                <div class="medical-icon"><i class="fas fa-hospital"></i></div>
+                <div class="medical-icon"><i class="fas fa-first-aid"></i></div>
+                <div class="medical-icon"><i class="fas fa-pills"></i></div>
+            </div>
+            
+            <div class="input-container">
+                <i class="fas fa-envelope input-icon"></i>
+                <input type="email" class="input-field" id="email" placeholder="Email" required>
+            </div>
+            
+            <div class="input-container">
+                <i class="fas fa-lock input-icon"></i>
+                <input type="password" class="input-field" id="password" placeholder="Password" required>
+            </div>
+            
+            <button class="btn btn-primary" onclick="login()">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+            
+            <div class="divider">OR</div>
+            
+            <div class="social-login">
+                <div class="social-btn google"><i class="fab fa-google"></i></div>
+                <div class="social-btn facebook"><i class="fab fa-facebook-f"></i></div>
+                <div class="social-btn twitter"><i class="fab fa-twitter"></i></div>
+            </div>
+            
+            <p class="small-text">Don't have an account? <a href="#" class="link" onclick="showRegister()">Register</a></p>
+        </div>
+        
+        <!-- Main Container (initially hidden) -->
+        <div class="main-container" id="main-container">
+            <h1><i class="fas fa-heartbeat heart-beat"></i> Emergency Services</h1>
+            
+            <div class="emergency-alert pulse">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p><strong>Time is critical!</strong> Call <strong>108</strong> immediately for serious emergencies.</p>
+            </div>
+            
+            <div class="emergency-section">
+                <button class="btn btn-primary" onclick="goToEmergency()">
+                    <i class="fas fa-ambulance"></i> Emergency Assistance
+                </button>
+                
+                <button class="btn btn-secondary" onclick="goToLiveLocation()">
+                    <i class="fas fa-map-marker-alt"></i> Find Nearby Hospitals
+                </button>
+                
+                <button class="btn btn-accent" onclick="goToChatbot()">
+                    <i class="fas fa-comment-medical"></i> First Aid Chatbot
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Function to handle login
+        function login() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            
+            if (email.trim() === "" || password.trim() === "") {
+                alert("Please enter both email and password");
+                return;
+            }
+            
+            // Simulate login process
+            // In a real application, you would validate credentials on a server
+            
+            // Hide login container with animation
+            const loginContainer = document.getElementById("login-container");
+            loginContainer.style.transform = "scale(0.8)";
+            loginContainer.style.opacity = "0";
+            
+            // Show main container after a short delay
+            setTimeout(() => {
+                loginContainer.style.display = "none";
+                
+                const mainContainer = document.getElementById("main-container");
+                mainContainer.style.display = "block";
+                mainContainer.classList.add("bounce-in");
+                
+                // Show user profile icon
+                document.getElementById("user-profile").style.display = "flex";
+            }, 500);
+        }
+        
+        // Function to show registration form (placeholder)
+        function showRegister() {
+            alert("Registration functionality will be implemented in the next phase");
+        }
+        
+        // Functions to navigate to different pages
+        function goToEmergency() {
+            alert("Navigating to Emergency page... (to be implemented)");
+            // In a real application: window.location.href = "emergency.html";
+        }
+        
+        function goToLiveLocation() {
+            window.location.href = "live_location.html";
+        }
+        
+        function goToChatbot() {
+            window.location.href = "chatbot.html";
+        }
+        
+        // Add event listener for Enter key on login form
+        document.getElementById("password").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>

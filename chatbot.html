@@ -1,0 +1,79 @@
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatBody = document.getElementById('chat-body');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const typingIndicator = document.getElementById('typing-indicator');
+    const loadingOverlay = document.getElementById('loading-overlay');
+
+    loadingOverlay.style.display = 'flex';
+    setTimeout(() => {
+        loadingOverlay.style.display = 'none';
+    }, 1500);
+
+    function addMessage(message, isUser) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', isUser ? 'user-message' : 'bot-message');
+        messageDiv.innerHTML = isUser ? message : message;
+        chatBody.appendChild(messageDiv);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+        typingIndicator.style.display = 'flex';
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+        typingIndicator.style.display = 'none';
+    }
+
+    function sendMessage() {
+        const message = userInput.value.trim();
+        if (message === '') return;
+        addMessage(message, true);
+        userInput.value = '';
+        showTypingIndicator();
+
+        const formData = new FormData();
+        formData.append('user_input', message);
+
+        // Get geolocation
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                formData.append('latitude', position.coords.latitude);
+                formData.append('longitude', position.coords.longitude);
+                sendToServer(formData);
+            }, () => {
+                sendToServer(formData); // Send without location on error
+            });
+        } else {
+            sendToServer(formData); // Fallback
+        }
+    }
+
+    function sendToServer(data) {
+        fetch('/get_response', {
+            method: 'POST',
+            body: data
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideTypingIndicator();
+            addMessage(data.response, false);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            hideTypingIndicator();
+            addMessage("I'm sorry, I couldn't process your request. Please try again later.", false);
+        });
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+});
+</script>

@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Service System - Nearby Hospitals</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: #e63946;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .user-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e63946;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .map-container {
+            height: 40vh;
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .location-info {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+        }
+
+        .location-info h3 {
+            font-size: 1rem;
+            color: #e63946;
+            margin-bottom: 0.5rem;
+        }
+
+        .location-address {
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .refresh-location {
+            background-color: #457b9d;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .hospitals-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .hospitals-header {
+            padding: 1rem;
+            background-color: #457b9d;
+            color: white;
+            font-weight: 600;
+        }
+
+        .hospitals-list {
+            max-height: 35vh;
+            overflow-y: auto;
+        }
+
+        .hospital-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 0.5rem;
+        }
+
+        .hospital-item:last-child {
+            border-bottom: none;
+        }
+
+        .hospital-name {
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+        }
+
+        .hospital-distance {
+            font-size: 0.8rem;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .directions-btn {
+            background-color: #e63946;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            height: fit-content;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .call-btn {
+            background-color: #2a9d8f;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            height: fit-content;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-top: 0.5rem;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #e63946;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            background-color: #ffeded;
+            border: 1px solid #e63946;
+            color: #e63946;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @media (min-width: 768px) {
+            .header-title {
+                font-size: 1.5rem;
+            }
+
+            .map-container {
+                height: 50vh;
+            }
+
+            .hospital-actions {
+                display: flex;
+                gap: 0.5rem;
+            }
+
+            .call-btn {
+                margin-top: 0;
+            }
+        }
+
+        .mapboxgl-popup-content {
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .popup-content h4 {
+            margin: 0 0 5px 0;
+            color: #e63946;
+        }
+
+        .popup-content p {
+            margin: 3px 0;
+            font-size: 13px;
+        }
+
+        .popup-btn {
+            background-color: #457b9d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-top: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Locating nearby hospitals...</p>
+    </div>
+
+    <header>
+        <a href="index.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            <span style="margin-left: 10px;">Back</span>
+        </a>
+        <div class="header-title">Nearby Hospitals</div>
+        <div class="user-icon">
+            <i class="fas fa-user"></i>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="error-message" id="errorMessage">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="errorText">Unable to access your location. Please enable location services.</span>
+        </div>
+
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+
+        <div class="location-info">
+            <h3>Your Current Location</h3>
+            <div class="location-address" id="currentAddress">Determining your location...</div>
+            <button class="refresh-location" id="refreshLocation">
+                <i class="fas fa-sync-alt"></i>
+                Refresh Location
+            </button>
+        </div>
+
+        <div class="hospitals-container">
+            <div class="hospitals-header">
+                <i class="fas fa-hospital"></i>
+                <span style="margin-left: 8px;">Nearby Hospitals</span>
+            </div>
+            <div class="hospitals-list" id="hospitalsList">
+                <!-- Hospital items will be added here dynamically -->
+                <div style="padding: 1rem; text-align: center;">Searching for hospitals near you...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set your Mapbox access token
+        mapboxgl.accessToken = 'pk.eyJ1IjoidmlrYXNoYnMiLCJhIjoiY203a2wzYndoMDFtazJscXE0eHBpODBtMCJ9.hTo6TMgHVko9O3bsaiyldw';
+        
+        // Global variables
+        let map;
+        let userMarker;
+        let userLocation;
+        let hospitalMarkers = [];
+
+        // DOM elements
+        const loadingOverlay = document.querySelector('.loading-overlay');
+        const errorMessage = document.getElementById('errorMessage');
+        const currentAddressElement = document.getElementById('currentAddress');
+        const hospitalsListElement = document.getElementById('hospitalsList');
+        const refreshLocationButton = document.getElementById('refreshLocation');
+
+        // Initialize map and get location
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeMap();
+            refreshLocationButton.addEventListener('click', refreshLocation);
+        });
+
+        // Initialize the map
+        function initializeMap() {
+            // Create the map
+            map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v11',
+                zoom: 14
+            });
+
+            // Add navigation controls
+            map.addControl(new mapboxgl.NavigationControl());
+
+            // Get user location
+            getUserLocation();
+
+            // Add event listeners for map
+            map.on('load', () => {
+                // Map is loaded and ready
+            });
+        }
+
+        // Get user's current location
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        // Update map with user location
+                        updateMapWithUserLocation();
+                        
+                        // Get nearby hospitals
+                        getNearbyHospitals();
+                        
+                        // Get address from coordinates
+                        reverseGeocode(userLocation);
+                    },
+                    error => {
+                        // Handle geolocation error
+                        handleLocationError(error);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                // Browser doesn't support geolocation
+                showError("Your browser doesn't support geolocation services.");
+            }
+        }
+
+        // Update map with user location
+        function updateMapWithUserLocation() {
+            // Center map on user location
+            map.flyTo({
+                center: [userLocation.lng, userLocation.lat],
+                zoom: 14,
+                essential: true
+            });
+
+            // Remove existing marker if any
+            if (userMarker) {
+                userMarker.remove();
+            }
+
+            // Create a pulsing dot for user location
+            const el = document.createElement('div');
+            el.className = 'marker';
+            el.style.width = '20px';
+            el.style.height = '20px';
+            el.style.borderRadius = '50%';
+            el.style.backgroundColor = '#457b9d';
+            el.style.border = '3px solid white';
+            el.style.boxShadow = '0 0 0 2px rgba(0,0,0,0.1)';
+            el.style.animation = 'pulse 2s infinite';
+
+            // Add marker for user location
+            userMarker = new mapboxgl.Marker(el)
+                .setLngLat([userLocation.lng, userLocation.lat])
+                .addTo(map)
+                .setPopup(new mapboxgl.Popup({ offset: 25 })
+                    .setHTML('<strong>Your Location</strong>'));
+        }
+
+        // Get nearby hospitals using Google Places API via a custom backend proxy
+        function getNearbyHospitals() {
+            // Clear existing hospital markers
+            clearHospitalMarkers();
+            
+            // Since we can't directly use Google Places API from the frontend,
+            // We're simulating the API response with the data provided by the user
+            setTimeout(() => {
+                const nearbyHospitals = [
+                    {
+                        name: "Sri Krishna Hospital",
+                        vicinity: "HM9Q+36C",
+                        distance: 1.6,
+                        rating: 5.0,
+                        user_ratings_total: 1,
+                        geometry: {
+                            location: {
+                                lat: userLocation.lat + 0.009,
+                                lng: userLocation.lng + 0.005
+                            }
+                        },
+                        phone: "+919876543210" // Simulated phone number
+                    },
+                    {
+                        name: "Alwin Hospital",
+                        vicinity: "Alwin Hospital, EB substation, to, Madurai high way, near Valayapatti, opposite to Bharath Petroleum Bunk",
+                        distance: 2.2,
+                        rating: 5.0,
+                        user_ratings_total: 1,
+                        geometry: {
+                            location: {
+                                lat: userLocation.lat - 0.008,
+                                lng: userLocation.lng + 0.011
+                            }
+                        },
+                        phone: "+919876543211" // Simulated phone number
+                    },
+                    {
+                        name: "Kunnur goverment hospital",
+                        vicinity: "Kunnur Speciality Hospital",
+                        distance: 1.8,
+                        rating: 3.0,
+                        user_ratings_total: 4,
+                        geometry: {
+                            location: {
+                                lat: userLocation.lat + 0.006,
+                                lng: userLocation.lng - 0.007
+                            }
+                        },
+                        phone: "+919876543212" // Simulated phone number
+                    },
+                    {
+                        name: "Raasi clinic",
+                        vicinity: "Police Station",
+                        distance: 1.9,
+                        rating: 5.0,
+                        user_ratings_total: 1,
+                        geometry: {
+                            location: {
+                                lat: userLocation.lat - 0.005,
+                                lng: userLocation.lng - 0.006
+                            }
+                        },
+                        phone: "+919876543213" // Simulated phone number
+                    },
+                    {
+                        name: "KARTHIKEYAN HEALTH CENTER",
+                        vicinity: "S.S.K Complex, Madurai Main Rd, near S.S.K Complex",
+                        distance: 1.7,
+                        rating: 3.0,
+                        user_ratings_total: 1,
+                        geometry: {
+                            location: {
+                                lat: userLocation.lat + 0.004,
+                                lng: userLocation.lng + 0.008
+                            }
+                        },
+                        phone: "+919876543214" // Simulated phone number
+                    },
+                    {
+                        name: "Raja hospital",
+                        vicinity: "31, N Car St",
+                        distance: 9.8,
+                        rating: 4.7,
+                        user_ratings_total: 72,
+                        geometry: {
+                            location: {
+                                lat: userLocation.lat - 0.03,
+                                lng: userLocation.lng + 0.04
+                            }
+                        },
+                        phone: "+919876543215" // Simulated phone number
+                    },
+                    {
+                        name: "Sri Sastha Clinic, Krishnankoil",
+                        vicinity: "HM8R+R4C",
+                        distance: 1.7,
+                        rating: 0,
+                        user_ratings_total: 0,
+                        geometry: {
+                            location: {
+                                lat: userLocation.lat + 0.003,
+                                lng: userLocation.lng - 0.009
+                            }
+                        },
+                        phone: "+919876543216" // Simulated phone number
+                    },
+                    {
+                        name: "Govt Veterinary Hospital, Kunnur",
+                        vicinity: "HMQX+7QJ, Krishnan Kovil - Kunnur Rd",
+                        distance: 1.9,
+                        rating: 5.0,
+                        user_ratings_total: 1,
+                        geometry: {
+                            location: {
+                                lat: userLocation.lat - 0.007,
+                                lng: userLocation.lng + 0.007
+                            }
+                        },
+                        phone: "+919876543217" // Simulated phone number
+                    },
+                    {
+                        name: "Anu Hospital",
+                        vicinity: "48/44&49/45, 21, Valaikulam Single St",
+                        distance: 9.7,
+                        rating: 4.6,
+                        user_ratings_total: 89,
+                        geometry: {
+                            location: {
+                                lat: userLocation.lat + 0.02,
+                                lng: userLocation.lng - 0.04
+                            }
+                        },
+                        phone: "+919876543218" // Simulated phone number
+                    }
+                ];
+
+                // Display hospitals on map and in list
+                displayHospitals(nearbyHospitals);
+                
+                // Hide loading overlay
+                loadingOverlay.style.display = 'none';
+            }, 2000); // Simulate API delay
+        }
+
+        // Display hospitals on map and in list
+        function displayHospitals(hospitals) {
+            // Sort hospitals by distance
+            hospitals.sort((a, b) => a.distance - b.distance);
+            
+            // Clear hospitals list
+            hospitalsListElement.innerHTML = '';
+            
+            // Check if hospitals were found
+            if (hospitals.length === 0) {
+                hospitalsListElement.innerHTML = '<div style="padding: 1rem; text-align: center;">No hospitals found nearby.</div>';
+                return;
+            }
+            
+            // Add hospitals to map and list
+            hospitals.forEach(hospital => {
+                // Add marker to map
+                addHospitalMarker(hospital);
+                
+                // Add to list
+                addHospitalToList(hospital);
+            });
+        }
+
+        // Add hospital marker to map
+        function addHospitalMarker(hospital) {
+            // Create custom marker element
+            const el = document.createElement('div');
+            el.className = 'hospital-marker';
+            el.style.backgroundImage = 'url(https://cdn0.iconfinder.com/data/icons/medical-services-2/256/Hospital-512.png)';
+            el.style.width = '30px';
+            el.style.height = '30px';
+            el.style.backgroundSize = '100%';
+            
+            // Create popup content
+            const popupContent = `
+                <div class="popup-content">
+                    <h4>${hospital.name}</h4>
+                    <p>${hospital.vicinity}</p>
+                    <p>Distance: ${hospital.distance} km</p>
+                    ${hospital.rating ? `<p>Rating: ${hospital.rating} (${hospital.user_ratings_total} reviews)</p>` : ''}
+                    <button class="popup-btn" onclick="openDirections(${hospital.geometry.location.lat}, ${hospital.geometry.location.lng}, '${hospital.name}')">
+                        Get Directions
+                    </button>
+                </div>
+            `;
+            
+            // Create and add marker
+            const marker = new mapboxgl.Marker(el)
+                .setLngLat([hospital.geometry.location.lng, hospital.geometry.location.lat])
+                .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
+                .addTo(map);
+                
+            // Store marker for later removal
+            hospitalMarkers.push(marker);
+        }
+
+        // Add hospital to list
+        function addHospitalToList(hospital) {
+            const hospitalElement = document.createElement('div');
+            hospitalElement.className = 'hospital-item';
+            
+            hospitalElement.innerHTML = `
+                <div class="hospital-info">
+                    <div class="hospital-name">${hospital.name}</div>
+                    <div class="hospital-address">${hospital.vicinity}</div>
+                    <div class="hospital-distance">
+                        <i class="fas fa-road"></i> ${hospital.distance} km away
+                        ${hospital.rating ? `<span style="margin-left: 10px;"><i class="fas fa-star" style="color: #ffc107;"></i> ${hospital.rating} (${hospital.user_ratings_total})</span>` : ''}
+                    </div>
+                </div>
+                <div class="hospital-actions">
+                    <button class="directions-btn" onclick="openDirections(${hospital.geometry.location.lat}, ${hospital.geometry.location.lng}, '${hospital.name}')">
+                        <i class="fas fa-directions"></i> Directions
+                    </button>
+                    <button class="call-btn" onclick="callHospital('${hospital.phone}')">
+                        <i class="fas fa-phone"></i> Call
+                    </button>
+                </div>
+            `;
+            
+            hospitalsListElement.appendChild(hospitalElement);
+        }
+
+        // Open Google Maps directions
+        function openDirections(lat, lng, name) {
+            const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${lat},${lng}&destination_place_id=${name}&travelmode=driving`;
+            window.open(url, '_blank');
+        }
+
+        // Call hospital
+        function callHospital(phoneNumber) {
+            window.open(`tel:${phoneNumber}`, '_self');
+        }
+
+        // Clear all hospital markers from map
+        function clearHospitalMarkers() {
+            hospitalMarkers.forEach(marker => marker.remove());
+            hospitalMarkers = [];
+        }
+
+        // Reverse geocode to get address from coordinates
+        function reverseGeocode(location) {
+            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${location.lng},${location.lat}.json?access_token=${mapboxgl.accessToken}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.features && data.features.length > 0) {
+                        const address = data.features[0].place_name;
+                        currentAddressElement.textContent = address;
+                    } else {
+                        currentAddressElement.textContent = `Lat: ${location.lat.toFixed(6)}, Lng: ${location.lng.toFixed(6)}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting address:', error);
+                    currentAddressElement.textContent = `Lat: ${location.lat.toFixed(6)}, Lng: ${location.lng.toFixed(6)}`;
+                });
+        }
+
+        // Handle location errors
+        function handleLocationError(error) {
+            let errorMsg = '';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMsg = "You denied the request for geolocation. Please enable location services.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMsg = "Location information is unavailable.";
+                    break;
+                case error.TIMEOUT:
+                    errorMsg = "The request to get user location timed out.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    errorMsg = "An unknown error occurred.";
+                    break;
+            }
+            
+            showError(errorMsg);
+            
+            // Initialize map with a default location
+            userLocation = { lat: 20.5937, lng: 78.9629 }; // Default to India center
+            updateMapWithUserLocation();
+            
+            // Hide loading overlay
+            loadingOverlay.style.display = 'none';
+        }
+
+        // Show error message
+        function showError(message) {
+            errorMessage.style.display = 'block';
+            document.getElementById('errorText').textContent = message;
+        }
+
+        // Refresh user location
+        function refreshLocation() {
+            // Show loading overlay
+            loadingOverlay.style.display = 'flex';
+            
+            // Reset error message
+            errorMessage.style.display = 'none';
+            
+            // Get location again
+            getUserLocation();
+        }
+    </script>
+</body>
+</html>
